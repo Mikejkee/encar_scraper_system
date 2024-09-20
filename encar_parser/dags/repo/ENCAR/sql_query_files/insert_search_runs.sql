@@ -1,0 +1,2 @@
+INSERT INTO encar.search_runs (start_time, status, finish_time, search_id, create_time, create_user, cars_cnt)
+VALUES (:start_time, :status, :finish_time, :search_id, :create_time, :create_user, :cars_cnt)

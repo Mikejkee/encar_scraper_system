@@ -1,0 +1,4 @@
+SELECT *
+FROM encar.searches
+WHERE start < CURRENT_TIMESTAMP
+AND finish > CURRENT_TIMESTAMP;

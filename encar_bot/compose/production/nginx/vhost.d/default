@@ -1,0 +1,8 @@
+location /static/ {
+    alias /encar_api/static/;
+    add_header Access-Control-Allow-Origin *;
+}
+location /media/ {
+    alias /encar_api/media/;
+    add_header Access-Control-Allow-Origin *;
+}

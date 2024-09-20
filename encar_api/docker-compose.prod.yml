@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  nginx-proxy:
+    container_name: nginx-proxy-bot
+    build:
+      context: .
+      dockerfile: ./compose/production/nginx/Dockerfile
+    restart: always
+    volumes:
+      - staticfiles:/encar_api/static
+      - mediafiles:/encar_api/media
+      - html:/usr/share/nginx/html
+      - vhost:/etc/nginx/vhost.d
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    ports:
+      - 6000:6000
+      - 443:443
+    depends_on:
+      - app
+    networks:
+      - net
+
+  app:
+    build:
+      context: .
+      dockerfile: ./compose/production/django/Dockerfile
+    # '/start' is the shell script used to run the service
+    command: /start
+    restart: always
+    volumes:
+      - staticfiles:/encar_api/static
+      - mediafiles:/encar_api/media
+    env_file:
+      - ./.env/.env-prod.dev
+    networks:
+      - net
+
+volumes:
+  postgres_data:
+  staticfiles:
+  mediafiles:
+  html:
+  vhost:
+
+networks:
+  net:
+    external: true

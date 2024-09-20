@@ -1,0 +1,85 @@
+version: "3.8"
+
+services:
+  app_bot:
+    build:
+      context: .
+      dockerfile: ./compose/local/django/Dockerfile
+    command: /start
+    ports:
+      - 8001:8000
+    volumes:
+      - .:/encar_bot
+    networks:
+      - net-for-api
+    env_file:
+      - ./.env/.env.dev
+    depends_on:
+      - redis_bot
+
+  redis_bot:
+    image: redis:7-alpine
+    networks:
+      - net-for-api
+
+  celery_bot_worker:
+    build:
+      context: .
+      dockerfile: ./compose/local/django/Dockerfile
+    command: /start-celeryworker
+    volumes:
+      - .:/encar_bot
+    networks:
+      - net-for-api
+    env_file:
+      - ./.env/.env.dev
+    depends_on:
+      - redis_bot
+
+  celery_bot_beat:
+    build:
+      context: .
+      dockerfile: ./compose/local/django/Dockerfile
+    command: /start-celerybeat
+    volumes:
+      - .:/encar_bot
+    networks:
+      - net-for-api
+    env_file:
+      - ./.env/.env.dev
+    depends_on:
+      - redis_bot
+
+  flower_bot:
+    build:
+      context: .
+      dockerfile: ./compose/local/django/Dockerfile
+    command: /start-flower
+    volumes:
+      - .:/encar_bot
+    networks:
+      - net-for-api
+    env_file:
+      - ./.env/.env.dev
+    ports:
+      - 5558:5555
+    depends_on:
+      - redis_bot
+
+  telegramdatasculptorsbot:
+    container_name: dataSculptors_bot
+    build:
+      context: .
+      dockerfile: ./compose/local/django/Dockerfile
+    command: /entrybot
+    volumes:
+      - .:/mainmodule
+    networks:
+      - net-for-api
+    env_file:
+      - ./.env/.env.dev
+
+networks:
+  net-for-api:
+    external:
+      name: encar-net

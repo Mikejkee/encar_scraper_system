@@ -1,0 +1,2 @@
+SELECT *
+FROM encar.cards;

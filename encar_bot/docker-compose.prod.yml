@@ -1,0 +1,163 @@
+version: "3.8"
+
+services:
+  nginx-proxy:
+    container_name: nginx-proxy-telegram-bot
+    build:
+      context: .
+      dockerfile: ./compose/production/nginx/Dockerfile
+    restart: always
+    volumes:
+      - staticfiles:/encar_bot/static
+      - mediafiles:/encar_bot/media
+      - html:/usr/share/nginx/html
+      - vhost:/etc/nginx/vhost.d
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    ports:
+      - 6001:6001
+      - 15672:15672
+    depends_on:
+      - app
+      - flower
+      - redis
+    networks:
+      - net
+
+  app:
+    build:
+      context: .
+      dockerfile: ./compose/production/django/Dockerfile
+    # '/start' is the shell script used to run the service
+    command: /start
+    restart: always
+    volumes:
+      - staticfiles:/encar_bot/static
+      - mediafiles:/encar_bot/media
+    env_file:
+      - ./.env/.env-prod.dev
+    depends_on:
+      - rabbitmq
+      - db
+    networks:
+      - net
+    links:
+      - flower
+
+  db:
+    image: postgres:16-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    restart: always
+    environment:
+      - POSTGRES_USER=Mikejkeee
+      - POSTGRES_PASSWORD=_'_ttj&8KsJTyD
+      - POSTGRES_DB=NOSUGAR_DB
+    networks:
+      - net
+
+  redis:
+    image: redis:6-alpine
+    restart: always
+    networks:
+      - net
+
+  rabbitmq:
+    image: rabbitmq:latest
+    restart: always
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+      - RABBITMQ_CONSUMER_TIMEOUT=31622400000
+    expose:
+      - 5672
+    volumes:
+      - /etc/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - staticfiles:/encar_bot/static
+      - mediafiles:/encar_bot/media
+    networks:
+      - net
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: ./compose/production/django/Dockerfile
+    command: /start-celeryworker
+    restart: always
+    volumes:
+      - staticfiles:/encar_bot/static
+      - mediafiles:/encar_bot/media
+    env_file:
+      - ./.env/.env-prod.dev
+    depends_on:
+      - rabbitmq
+    networks:
+      - net
+
+  celery_beat:
+    build:
+      context: .
+      dockerfile: ./compose/production/django/Dockerfile
+    command: /start-celerybeat
+    restart: always
+    volumes:
+      - staticfiles:/encar_bot/static
+      - mediafiles:/encar_bot/media
+    env_file:
+      - ./.env/.env-prod.dev
+    depends_on:
+      - rabbitmq
+    networks:
+      - net
+
+  flower:
+    build:
+      context: .
+      dockerfile: ./compose/production/django/Dockerfile
+    image: mher/flower:latest
+    command: /start-flower
+    restart: always
+    hostname: flower
+    volumes:
+      - staticfiles:/encar_bot/static
+      - mediafiles:/encar_bot/media
+      - flower_db:/encar_bot/flower_db
+    env_file:
+      - ./.env/.env-prod.dev
+    links:
+      - rabbitmq
+      - celery_worker
+      - celery_beat
+    depends_on:
+      - rabbitmq
+      - db
+    networks:
+      - net
+
+  telegrambot:
+    build:
+      context: .
+      dockerfile: ./compose/production/django/Dockerfile
+    image: telegrambot
+    command: /entrybot
+    volumes:
+      - .:/encar_bot
+    env_file:
+      - ./.env/.env-prod.dev
+    depends_on:
+      - rabbitmq
+      - app
+      - redis
+    networks:
+      - net
+
+volumes:
+  postgres_data:
+  staticfiles:
+  mediafiles:
+  flower_db:
+  html:
+  vhost:
+
+networks:
+  net:
+    external: true
