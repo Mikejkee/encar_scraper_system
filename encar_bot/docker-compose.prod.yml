@@ -1,8 +1,5 @@
-version: "3.8"
-
 services:
   nginx-proxy:
-    container_name: nginx-proxy-telegram-bot
     build:
       context: .
       dockerfile: ./compose/production/nginx/Dockerfile
@@ -14,14 +11,16 @@ services:
       - vhost:/etc/nginx/vhost.d
       - /var/run/docker.sock:/tmp/docker.sock:ro
     ports:
-      - 6001:6001
+      - 8001:6001
       - 15672:15672
     depends_on:
       - app
       - flower
       - redis
     networks:
-      - net
+      - encar_net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   app:
     build:
@@ -37,29 +36,20 @@ services:
       - ./.env/.env-prod.dev
     depends_on:
       - rabbitmq
-      - db
     networks:
-      - net
+      - encar_net
     links:
       - flower
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
-  db:
-    image: postgres:16-alpine
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
-    restart: always
-    environment:
-      - POSTGRES_USER=Mikejkeee
-      - POSTGRES_PASSWORD=_'_ttj&8KsJTyD
-      - POSTGRES_DB=NOSUGAR_DB
-    networks:
-      - net
-
-  redis:
+  redis_bot:
     image: redis:6-alpine
     restart: always
     networks:
-      - net
+      - encar_net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   rabbitmq:
     image: rabbitmq:latest
@@ -75,7 +65,9 @@ services:
       - staticfiles:/encar_bot/static
       - mediafiles:/encar_bot/media
     networks:
-      - net
+      - encar_net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   celery_worker:
     build:
@@ -91,7 +83,9 @@ services:
     depends_on:
       - rabbitmq
     networks:
-      - net
+      - encar_net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   celery_beat:
     build:
@@ -107,7 +101,9 @@ services:
     depends_on:
       - rabbitmq
     networks:
-      - net
+      - encar_net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   flower:
     build:
@@ -129,9 +125,10 @@ services:
       - celery_beat
     depends_on:
       - rabbitmq
-      - db
     networks:
-      - net
+      - encar_net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   telegrambot:
     build:
@@ -146,9 +143,11 @@ services:
     depends_on:
       - rabbitmq
       - app
-      - redis
+      - redis_bot
     networks:
-      - net
+      - encar_net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 volumes:
   postgres_data:
@@ -159,5 +158,5 @@ volumes:
   vhost:
 
 networks:
-  net:
+  encar_net:
     external: true

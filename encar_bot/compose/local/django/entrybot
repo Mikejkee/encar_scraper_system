@@ -7,4 +7,4 @@ set -o pipefail
 # exits if any of your variables is not set
 set -o nounset
 
-python encar_telegram_bot.py
+python ./bot_logic/encar_telegram_bot.py

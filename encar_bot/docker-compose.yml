@@ -66,8 +66,7 @@ services:
     depends_on:
       - redis_bot
 
-  telegramdatasculptorsbot:
-    container_name: dataSculptors_bot
+  telegrambot:
     build:
       context: .
       dockerfile: ./compose/local/django/Dockerfile

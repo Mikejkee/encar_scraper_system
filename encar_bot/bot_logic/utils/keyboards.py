@@ -3,7 +3,7 @@ import os
 from asgiref.sync import sync_to_async
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 
-ADMINS_LIST = os.environ.get('ADMINS_LIST').split(',')
+# ADMINS_LIST = os.environ.get('ADMINS_LIST').split(',')
 
 
 @sync_to_async
@@ -20,7 +20,7 @@ def start_menu_buttons(user_telegram_id: int):
     ]
 
     # TODO: реализовать через запрос в бд
-    if user_telegram_id in ADMINS_LIST:
+    if user_telegram_id in [229995755, ]:
         buttons.append([KeyboardButton(text='Администрирование бота')])
 
     return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True, input_field_placeholder="Воспользуйтесь меню:")
@@ -35,7 +35,7 @@ def filter_menu_buttons():
         ],
         [
             KeyboardButton(text='Удалить фильтр'),
-            KeyboardButton(text='🔙 Главное меню'),
+            KeyboardButton(text='Главное меню'),
         ],
     ]
     return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True, input_field_placeholder="Выберите пункт меню:")
@@ -53,7 +53,7 @@ def cars_menu_buttons():
             KeyboardButton(text='Карточка диагностики машины'),
         ],
         [
-            KeyboardButton(text='🔙 Главное меню'),
+            KeyboardButton(text='Главное меню'),
         ],
     ]
     return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True, input_field_placeholder="Выберите пункт меню:")
@@ -68,7 +68,7 @@ def cars_analytic_menu_buttons():
         ],
         [
             KeyboardButton(text='Назад к информации о машине'),
-            KeyboardButton(text='🔙 Главное меню'),
+            KeyboardButton(text='Главное меню'),
         ],
     ]
     return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True, input_field_placeholder="Выберите пункт меню:")
@@ -78,7 +78,7 @@ def cars_analytic_menu_buttons():
 def head_menu_button():
     buttons = [
         [
-            KeyboardButton(text='🔙 Главное меню')
+            KeyboardButton(text='Главное меню')
         ],
     ]
     return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True, input_field_placeholder="Выберите пункт меню:")
