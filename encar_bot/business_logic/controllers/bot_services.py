@@ -3,29 +3,30 @@ import logging
 import json
 import tempfile
 
-import requests
+import aiogram
 import aiohttp
 from django.db import transaction
 from aiogram import types
 
+from business_logic.telegram_tasks import tg_message_task
 from business_logic.models import *
-from business_logic.controllers.utils import exist_user_check_status, tg_reminder, is_url, process_car_info, \
-    make_api_request, handle_error_response
+from business_logic.controllers.utils import exist_user_check_status, is_url, make_api_request, handle_error_response
 
 session = aiohttp.ClientSession()
 
 logger = logging.getLogger('db_logger')
-api_token = os.environ.get('API_TOKEN')
 api_url = os.environ.get('API_URL')
+headers = {"Authorization": f"Token {os.environ.get('API_TOKEN')}"}
 
 
-def save_user(role_type=None, name=None, surname=None, patronymic=None, person_fio=None, date_of_birth=None,
-              phone_number=None, telegram_chat_id=None, telegram_id=None, telegram_username=None, telegram_name=None,
-              telegram_surname=None, email=None, background_image=None, address=None, addition_information=None):
+def save_user(role_type: str = None, name: str = None, surname: str = None, patronymic: str = None,
+              person_fio: str = None, date_of_birth: str = None, phone_number: str = None, telegram_chat_id: str = None,
+              telegram_id: str = None, telegram_username: str = None, telegram_name: str = None,
+              telegram_surname: str = None, email: str = None, background_image: str = None) -> bool:
     try:
         persons = exist_user_check_status(telegram_id, telegram_username)
         with transaction.atomic():
-            if persons and persons.exists():
+            if persons:
                 try:
                     person = persons.last()
                     fields = {
@@ -46,8 +47,8 @@ def save_user(role_type=None, name=None, surname=None, patronymic=None, person_f
                     return True
 
                 except Exception as e:
-                    logger.warning(f'Задача - save_user для tg - {telegram_id} должна была обновить информацию о '
-                                   f'пользователе, но ошибка {e}')
+                    logger.error(f'Задача - save_user для tg - {telegram_id} должна была обновить информацию о '
+                                 f'пользователе, но ошибка {e}')
                     return False
             else:
                 role = Role.objects.filter(role_type=str(role_type)).last()
@@ -69,73 +70,106 @@ def save_user(role_type=None, name=None, surname=None, patronymic=None, person_f
                     return True
 
                 except Exception as e:
-                    logger.warning(f'Задача - save_user для tg - {telegram_id} должна была создать его, но в поиске '
-                                   f'заданной роли ошибка - {e}')
+                    logger.error(f'Задача - save_user для tg - {telegram_id} должна была создать его, но в поиске '
+                                 f'заданной роли ошибка - {e}')
                     return False
 
     except Exception as e:
-        logger.warning(f'Задача - save_user для tg - {telegram_id}, ошибка - {e}')
+        logger.error(f'Задача - save_user для tg - {telegram_id}, ошибка - {e}')
         return False
 
 
-def request_api_car_info(message, telegram_id):
-    headers = {"Authorization": f"Token {api_token}"}
-    task_type = 'request_api_car_info'
+async def tg_message(bot: aiogram.Bot, telegram_id: str, file_path: str = None, message: str = None) -> bool:
+    try:
+        async with session:
+            if file_path:
+                filename = file_path.split(os.sep)[-1]
+                await bot.send_document(chat_id=telegram_id, document=types.FSInputFile(file_path, filename=filename))
+            else:
+                await bot.send_message(chat_id=telegram_id, text=message)
+            return True
+    except Exception as e:
+        logger.error(f'Задача - tg_message для tg - {telegram_id}, ошибка при отправке сообщения {e}')
+        return False
+
+
+def api_request_car_info(message: str, telegram_id: str) -> bool:
+    task_type = 'api_request_car_info'
 
     if is_url(message):
         api_type = "by_url"
-        params = {"car_url": message}
-        url = f'{api_url}/car_info/by_url/'
-        response = make_api_request(url, params, headers, telegram_id, task_type)
     else:
         api_type = "by_vin"
-        params = {"car_vin": message}
-        url = f'{api_url}/car_info/by_vin/'
-        response = make_api_request(url, params, headers, telegram_id, task_type)
+
+    params = {"car_url": message}
+    url = f'{api_url}/car/info/{api_type}/'
+    response = make_api_request(url, params, headers, telegram_id, task_type)
 
     if not response:
-        return False
+        message_formatted = 'Ошибка запроса, обратитесь к администратору'
+    else:
+        car_info = json.loads(response.json())
+        message_formatted = f"""
+                Идентификатор машины: {car_info['car_id']} \\n
+                Модель: {car_info['model']} \\n
+                Марка: {car_info['brand']} \\n
+                Год выпуска: {car_info['model_year']} \\n
+                Пробег: {car_info['mileage']} \\n
+                Топливо: {car_info['fuel']} \\n
+                Ссылка: {car_info['link']} \\n
+                Ссылка на диагностику: {car_info['encar_diagnosis_url']} \\n
+                Ссылка на страховку: {car_info['perfomance_record_url']} \\n
+        """
 
-    if response.status_code != 200:
-        handle_error_response(telegram_id, task_type, api_type, response, message)
-        return True
-
-    process_car_info(telegram_id, response.json(), api_type)
+    tg_message_task.apply_async(kwargs={'telegram_id': telegram_id, 'message': message_formatted}, countdown=0)
     return True
 
 
-# async def tg_message(bot, telegram_id, content, messages=None):
-#     try:
-#         async with session:
-#             await bot.send_message(chat_id=telegram_id, text=content, parse_mode='HTML')
-#             if messages:
-#                 for msg in messages:
-#                     await bot.delete_message(chat_id=telegram_id, message_id=msg)
-#             return True
-#     except Exception as e:
-#         logger.warning(f'Задача - tg_message для tg - {telegram_id}, ошибка при отправке сообщения {e}')
-#         return False
+def api_request_filters(telegram_id: str) -> bool:
+    task_type = 'api_request_filters'
+    params = {"telegram_id": telegram_id}
+    url = f'{api_url}/filter/info/'
+    response = make_api_request(url, params, headers, telegram_id, task_type)
+
+    if not response:
+        message_formatted = 'Ошибка запроса, обратитесь к администратору'
+    else:
+        filters_info = json.loads(response.json())
+        if len(filters_info) > 0:
+            message_formatted = "\n".join([f"{filter['id']} - {filter['title']}" for filter in filters_info])
+        else:
+            message_formatted = "У вас нет выставленных фильтров"
+
+    tg_message_task.apply_async(kwargs={'telegram_id': telegram_id, 'message': message_formatted}, countdown=0)
+    return True
 
 
-async def tg_message(bot, telegram_id, content, messages=None):
-    try:
-        async with session:
-            content_json = json.dumps(content, indent=4)
+def api_delete_filter(telegram_id: str, filter_id: str) -> bool:
+    task_type = 'api_delete_filter'
+    params = {"telegram_id": telegram_id, 'filter_id': filter_id}
+    url = f'{api_url}/filter/delete/'
+    response = make_api_request(url, params, headers, telegram_id, task_type)
 
-            # Создаем временный файл и записываем туда JSON-строку
-            with tempfile.NamedTemporaryFile(mode='w', delete=False, encoding='utf-8') as temp_file:
-                temp_file.write(content_json)
+    if not response:
+        message_formatted = 'Ошибка запроса, обратитесь к администратору'
+    else:
+        message_formatted = "Фильтр успешно удален"
 
-            # Отправляем файл пользователю в Telegram
-            await bot.send_document(chat_id=telegram_id, document=types.FSInputFile(temp_file.name,
-                                                                                      filename="Информация"))
+    tg_message_task.apply_async(kwargs={'telegram_id': telegram_id, 'message': message_formatted}, countdown=0)
+    return True
 
-            if messages:
-                for msg in messages:
-                    await bot.delete_message(chat_id=telegram_id, message_id=msg)
 
-            return True
-    except Exception as e:
-        logger.warning(f'Задача - tg_message для tg - {telegram_id}, ошибка при отправке сообщения {e}')
-        return False
+def api_create_filter(telegram_id: str, title: str, link: str, brand: str, model: str, generation: str) -> bool:
+    task_type = 'api_create_filter'
+    params = {"telegram_id": telegram_id, 'title': title, 'link': link, "brand": brand, "model": model,
+              "generation": generation}
+    url = f'{api_url}/filter/create/'
+    response = make_api_request(url, params, headers, telegram_id, task_type)
 
+    if not response:
+        message_formatted = 'Ошибка запроса, обратитесь к администратору'
+    else:
+        message_formatted = "Фильтр успешно создан"
+
+    tg_message_task.apply_async(kwargs={'telegram_id': telegram_id, 'message': message_formatted}, countdown=0)
+    return True

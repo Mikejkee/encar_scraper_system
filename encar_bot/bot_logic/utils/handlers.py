@@ -1,5 +1,3 @@
-import logging
-
 from aiogram.types import Message
 from aiogram import Router, F
 from aiogram.filters import Command
@@ -14,7 +12,6 @@ from .keyboards import (start_menu_buttons, cars_menu_buttons, cars_analytic_men
                         head_menu_button, filter_menu_buttons)
 
 router = Router()
-logger = logging.getLogger('db_logger')
 
 
 @router.message(Command("start"))
@@ -29,7 +26,7 @@ async def bot_start_menu(message: Message, state: FSMContext):
     telegram_name = from_user.first_name
     telegram_surname = from_user.last_name
 
-    await save_client(logger, telegram_chat_id=chat_id, telegram_id=telegram_id, telegram_name=telegram_name,
+    await save_client(telegram_chat_id=chat_id, telegram_id=telegram_id, telegram_name=telegram_name,
                       telegram_surname=telegram_surname, telegram_username=telegram_username)
 
     hello = f'Добро пожаловать в нашу систему!'
@@ -115,11 +112,11 @@ async def bot_request_car_info(message: Message, state: FSMContext):
         answer_text = 'Выберите желаемую аналитику'
         chosen_state = RequestCarState.request_analytic_type
     elif message.text == "Карточка машины":
-        await request_car(logger, car_id, telegram_id)
+        await request_car(car_id, telegram_id)
     elif message.text == "Карточка страховки машины":
-        await request_car_insurance(logger, car_id, telegram_id)
+        await request_car_insurance(car_id, telegram_id)
     elif message.text == "Карточка диагностики машины":
-        await request_car_diagnostic(logger, car_id, telegram_id)
+        await request_car_diagnostic(car_id, telegram_id)
 
     await message.answer(text=answer_text, reply_markup=keyboard)
     await state.set_state(chosen_state)
@@ -132,9 +129,9 @@ async def bot_request_analytic(message: Message, state: FSMContext):
     car_id = state_data.get('request_car')
 
     if message.text == "Аналитика стоимости машины":
-        await request_analytic_cost(logger, car_id, telegram_id)
+        await request_analytic_cost(car_id, telegram_id)
     elif message.text == "Аналитика повреждений":
-        await request_analytic_damage(logger, car_id, telegram_id)
+        await request_analytic_damage(car_id, telegram_id)
 
     keyboard = await cars_analytic_menu_buttons()
     await message.answer(
@@ -155,7 +152,7 @@ async def bot_filter_menu(message: Message, state: FSMContext):
 async def bot_request_filter(message: Message, state: FSMContext):
     from_user = message.from_user
     telegram_id = from_user.id
-    await request_filter(logger, telegram_id)
+    await request_filter(telegram_id)
 
     keyboard = await filter_menu_buttons()
     await message.answer(text="Запрос принят, ожидайте ответа!", reply_markup=keyboard)
@@ -175,7 +172,7 @@ async def bot_delete_filter_message(message: Message, state: FSMContext):
     telegram_id = from_user.id
     filter_id = message.text
 
-    await delete_filter(logger, telegram_id, filter_id)
+    await delete_filter(telegram_id, filter_id)
 
     keyboard = await filter_menu_buttons()
     await message.answer(text="Фильтр удален из отслеживания", reply_markup=keyboard)
@@ -185,7 +182,7 @@ async def bot_delete_filter_message(message: Message, state: FSMContext):
 @router.message(RequestFilterState.action_type, F.text == "Добавить новый фильтр")
 async def bot_create_filter(message: Message, state: FSMContext):
     keyboard = await head_menu_button()
-    await message.answer(text="Название фильтра (название машины)?", reply_markup=keyboard)
+    await message.answer(text="Название фильтра (название машины) для их дальнейшего отличия?", reply_markup=keyboard)
     await state.set_state(RequestFilterState.request_title_filter)
 
 
@@ -237,7 +234,7 @@ async def bot_create_filter_save(message: Message, state: FSMContext):
     model = state_data.get('filter_model')
     generation = message.text
 
-    await create_filter(logger, telegram_id, title, link, brand, model, generation)
+    await create_filter(telegram_id, title, link, brand, model, generation)
 
     keyboard = await filter_menu_buttons()
     await message.answer(text="Фильтр добавлен для отслеживания", reply_markup=keyboard)
