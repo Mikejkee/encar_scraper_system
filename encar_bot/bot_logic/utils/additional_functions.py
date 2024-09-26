@@ -1,11 +1,11 @@
-import os
+import sys
 import logging
+from os.path import dirname, realpath
 
-import django
 from asgiref.sync import sync_to_async
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mainmodule.settings")
-django.setup()
+begin_path = dirname(dirname(dirname(realpath(__file__))))
+sys.path.append(begin_path)
 
 from business_logic.telegram_tasks import (save_client_task, api_request_car_info_task, api_request_filters_task,
                                            api_delete_filter_task, api_create_filter_task)
@@ -17,12 +17,10 @@ logger = logging.getLogger('db_logger')
 def save_client(name: str = None, surname: str = None, patronymic: str = None, person_fio: str = None,
                 date_of_birth: str = None, phone_number: str = None, telegram_chat_id: str = None,
                 telegram_id: str = None, telegram_username: str = None, telegram_name: str = None,
-                telegram_surname: str = None, email: str = None, background_image: str = None, address: str = None,
-                addition_information: str = None):
+                telegram_surname: str = None, email: str = None, background_image: str = None):
     client_task = save_client_task.delay(name, surname, patronymic, person_fio, date_of_birth, phone_number,
                                          telegram_chat_id, telegram_id, telegram_username, telegram_name,
-                                         telegram_surname, email, background_image, address,
-                                         addition_information)
+                                         telegram_surname, email, background_image)
 
     logger.info(f'Задача создана - save_client_task, id - {client_task.task_id}')
 

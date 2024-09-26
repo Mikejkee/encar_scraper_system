@@ -1,0 +1,2 @@
+SELECT *
+FROM encar.parsing_result_insurance_card

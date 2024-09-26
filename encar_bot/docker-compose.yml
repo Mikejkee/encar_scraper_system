@@ -11,7 +11,7 @@ services:
     volumes:
       - .:/encar_bot
     networks:
-      - net-for-api
+      - encar_net
     env_file:
       - ./.env/.env.dev
     depends_on:
@@ -20,7 +20,7 @@ services:
   redis_bot:
     image: redis:7-alpine
     networks:
-      - net-for-api
+      - encar_net
 
   celery_bot_worker:
     build:
@@ -30,7 +30,7 @@ services:
     volumes:
       - .:/encar_bot
     networks:
-      - net-for-api
+      - encar_net
     env_file:
       - ./.env/.env.dev
     depends_on:
@@ -44,7 +44,7 @@ services:
     volumes:
       - .:/encar_bot
     networks:
-      - net-for-api
+      - encar_net
     env_file:
       - ./.env/.env.dev
     depends_on:
@@ -58,7 +58,7 @@ services:
     volumes:
       - .:/encar_bot
     networks:
-      - net-for-api
+      - encar_net
     env_file:
       - ./.env/.env.dev
     ports:
@@ -74,11 +74,10 @@ services:
     volumes:
       - .:/mainmodule
     networks:
-      - net-for-api
+      - encar_net
     env_file:
       - ./.env/.env.dev
 
 networks:
-  net-for-api:
-    external:
-      name: encar-net
+  encar_net:
+    external: true

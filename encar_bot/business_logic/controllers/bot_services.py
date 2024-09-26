@@ -161,8 +161,8 @@ def api_delete_filter(telegram_id: str, filter_id: str) -> bool:
 
 def api_create_filter(telegram_id: str, title: str, link: str, brand: str, model: str, generation: str) -> bool:
     task_type = 'api_create_filter'
-    params = {"telegram_id": telegram_id, 'title': title, 'link': link, "brand": brand, "model": model,
-              "generation": generation}
+    params = {"telegram_id": telegram_id, 'title': title, 'link': link, "brand_code": brand, "model_code": model,
+              "generation_code": generation}
     url = f'{api_url}/filter/create/'
     response = make_api_request(url, params, headers, telegram_id, task_type)
 

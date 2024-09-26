@@ -201,3 +201,30 @@ SIMPLE_JWT = {
 
 CSRF_TRUSTED_ORIGINS = ['https://api.encar.tech', 'https://static.encar.tech',]
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': "%(asctime)s - [%(levelname)s] -  %(name)s - (%(filename)s).%(funcName)s(%(lineno)d) - "
+                      "%(message)s"
+        },
+    },
+    'handlers': {
+        'log_db': {
+            'level': 'INFO',
+            'class': 'api.handlers.DBHandler',
+            'model': 'api.models.DBLog',
+            'expiry': 86400,
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'db_logger': {
+            'level': 'INFO',
+            'handlers': ['log_db']
+        },
+    }
+}
+
+

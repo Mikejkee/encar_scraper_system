@@ -329,7 +329,7 @@ services:
     volumes:
       - ./psql:/var/lib/postgresql/psql
     networks:
-    - net-for-db
+    - encar_net
     ports:
       - "5433:5433"
     command:
@@ -339,6 +339,6 @@ volumes:
   postgres-db-volume:
   
 networks:
-  net-for-db:
-    name: encar-net
+  encar_net:
+    external: true
  

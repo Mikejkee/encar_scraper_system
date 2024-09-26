@@ -1,8 +1,5 @@
-version: "3.8"
-
 services:
   nginx-proxy:
-    container_name: nginx-proxy-bot
     build:
       context: .
       dockerfile: ./compose/production/nginx/Dockerfile
@@ -14,12 +11,14 @@ services:
       - vhost:/etc/nginx/vhost.d
       - /var/run/docker.sock:/tmp/docker.sock:ro
     ports:
-      - 6000:6000
+      - 8000:6000
       - 443:443
     depends_on:
       - app
     networks:
-      - net
+      - encar_net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   app:
     build:
@@ -34,7 +33,11 @@ services:
     env_file:
       - ./.env/.env-prod.dev
     networks:
-      - net
+      - encar_net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    expose:
+      - "8000"
 
 volumes:
   postgres_data:
@@ -44,5 +47,5 @@ volumes:
   vhost:
 
 networks:
-  net:
+  encar_net:
     external: true

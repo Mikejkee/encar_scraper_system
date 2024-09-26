@@ -152,4 +152,3 @@ class Client(Person):
 
     class Meta:
         db_table = 'client'
-

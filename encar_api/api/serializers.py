@@ -140,3 +140,13 @@ class InspectionSerializer(serializers.Serializer):
     last_parsing_ts = serializers.DateTimeField()
     warranty_period_from = serializers.DateField()
     warranty_period_to = serializers.DateField()
+
+
+class FilterSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    title = serializers.CharField(max_length=1024)
+    link = serializers.CharField(max_length=2048)
+    brand_code = serializers.CharField(max_length=64)
+    model_code = serializers.CharField(max_length=64)
+    generation_code = serializers.CharField(max_length=64)
+    create_user = serializers.CharField(max_length=64)
