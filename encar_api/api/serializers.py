@@ -73,6 +73,24 @@ class CarSerializer(serializers.Serializer):
     engine_capacity_cc = serializers.IntegerField()
 
 
+class CarListSerializer(serializers.Serializer):
+    car_id = serializers.IntegerField()
+    price = serializers.IntegerField()
+    brand = serializers.CharField(max_length=128)
+    model = serializers.CharField(max_length=128)
+    fuel = serializers.CharField(max_length=64)
+    mileage = serializers.IntegerField()
+    manufacture_date = serializers.CharField(max_length=64)
+    model_year = serializers.IntegerField()
+    transmission = serializers.CharField(max_length=64)
+    perfomance_record_url = serializers.CharField(max_length=2048)
+    encar_diagnosis_url = serializers.CharField(max_length=2048)
+    equipment = serializers.CharField(max_length=256)
+    location = serializers.CharField(max_length=128)
+    marketing_description = serializers.CharField(max_length=512)
+    link = serializers.CharField(max_length=2048)
+
+
 class InsuranceSerializer(serializers.Serializer):
     car_id = serializers.IntegerField()
     last_id = serializers.IntegerField()

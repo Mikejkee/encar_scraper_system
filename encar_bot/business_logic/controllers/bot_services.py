@@ -1,7 +1,5 @@
 import os
 import logging
-import json
-import tempfile
 
 import aiogram
 import aiohttp
@@ -106,21 +104,20 @@ def api_request_car_info(message: str, telegram_id: str) -> bool:
     response = make_api_request(url, params, headers, telegram_id, task_type)
 
     if not response:
-        message_formatted = 'Ошибка запроса, обратитесь к администратору'
-    else:
-        car_info = json.loads(response.json())
-        message_formatted = f"""
-                Идентификатор машины: {car_info['car_id']} \\n
-                Модель: {car_info['model']} \\n
-                Марка: {car_info['brand']} \\n
-                Год выпуска: {car_info['model_year']} \\n
-                Пробег: {car_info['mileage']} \\n
-                Топливо: {car_info['fuel']} \\n
-                Ссылка: {car_info['link']} \\n
-                Ссылка на диагностику: {car_info['encar_diagnosis_url']} \\n
-                Ссылка на страховку: {car_info['perfomance_record_url']} \\n
-        """
+        return False
 
+    car_info = response.json()
+    message_formatted = f"""
+            Идентификатор машины: {car_info['car_id']}
+            Модель: {car_info['model']} 
+            Марка: {car_info['brand']} 
+            Год выпуска: {car_info['model_year']} 
+            Пробег: {car_info['mileage']}
+            Топливо: {car_info['fuel']}
+            Ссылка: {car_info['link']}
+            Ссылка на диагностику: {car_info['encar_diagnosis_url']} 
+            Ссылка на страховку: {car_info['perfomance_record_url']} 
+        """
     tg_message_task.apply_async(kwargs={'telegram_id': telegram_id, 'message': message_formatted}, countdown=0)
     return True
 
@@ -132,13 +129,13 @@ def api_request_filters(telegram_id: str) -> bool:
     response = make_api_request(url, params, headers, telegram_id, task_type)
 
     if not response:
-        message_formatted = 'Ошибка запроса, обратитесь к администратору'
+        return False
+
+    filters_info = response.json()
+    if len(filters_info) > 0:
+        message_formatted = "\n".join([fr"ID - <b>{filter['id']} </b> ({filter['title']})" for filter in filters_info])
     else:
-        filters_info = json.loads(response.json())
-        if len(filters_info) > 0:
-            message_formatted = "\n".join([f"{filter['id']} - {filter['title']}" for filter in filters_info])
-        else:
-            message_formatted = "У вас нет выставленных фильтров"
+        message_formatted = "У вас нет выставленных фильтров"
 
     tg_message_task.apply_async(kwargs={'telegram_id': telegram_id, 'message': message_formatted}, countdown=0)
     return True
@@ -151,10 +148,9 @@ def api_delete_filter(telegram_id: str, filter_id: str) -> bool:
     response = make_api_request(url, params, headers, telegram_id, task_type)
 
     if not response:
-        message_formatted = 'Ошибка запроса, обратитесь к администратору'
-    else:
-        message_formatted = "Фильтр успешно удален"
+        return False
 
+    message_formatted = "Фильтр успешно удален"
     tg_message_task.apply_async(kwargs={'telegram_id': telegram_id, 'message': message_formatted}, countdown=0)
     return True
 
@@ -167,9 +163,8 @@ def api_create_filter(telegram_id: str, title: str, link: str, brand: str, model
     response = make_api_request(url, params, headers, telegram_id, task_type)
 
     if not response:
-        message_formatted = 'Ошибка запроса, обратитесь к администратору'
-    else:
-        message_formatted = "Фильтр успешно создан"
+        return False
 
+    message_formatted = "Фильтр успешно создан"
     tg_message_task.apply_async(kwargs={'telegram_id': telegram_id, 'message': message_formatted}, countdown=0)
     return True

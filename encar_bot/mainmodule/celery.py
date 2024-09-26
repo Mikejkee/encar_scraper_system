@@ -10,6 +10,6 @@ app.autodiscover_tasks(settings.INSTALLED_APPS)
 
 
 class BaseTask(Task):
-    autoretry_for = (Exception, KeyError)
+    autoretry_for = ()
     retry_kwargs = {'max_retries': 2}
     retry_backoff = True

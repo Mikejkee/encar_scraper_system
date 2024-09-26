@@ -38,7 +38,7 @@ def make_api_request(url: str, params: dict, headers: dict, telegram_id: str,
 
     if response.status_code != 200:
         handle_error_response(telegram_id, task_type, url, response, params)
-        return True
+        return False
 
     return response
 
@@ -49,7 +49,7 @@ def handle_error_response(telegram_id: str, task_type: str, api_type: str, respo
         error_message = response.json()["error"]
         if "does not exist" in error_message:
             logger.error(f'Задача - {task_type} по {api_type} для telegram - {telegram_id}, ошибка при запросе api, '
-                         f'нет таких параметров - {str(params)}')
+                         f'нет таких параметров - {str(params)}, error_message - {error_message}')
             tg_message_task.apply_async(kwargs={'telegram_id': telegram_id,
                                                 'message': "Информации о данном значении нет в системе"},
                                         countdown=0)

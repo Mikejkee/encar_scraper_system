@@ -175,7 +175,7 @@ async def bot_delete_filter_message(message: Message, state: FSMContext):
     await delete_filter(telegram_id, filter_id)
 
     keyboard = await filter_menu_buttons()
-    await message.answer(text="Фильтр удален из отслеживания", reply_markup=keyboard)
+    await message.answer(text="Запрос принят, ожидайте ответа!", reply_markup=keyboard)
     await state.set_state(RequestFilterState.action_type)
 
 
@@ -237,5 +237,5 @@ async def bot_create_filter_save(message: Message, state: FSMContext):
     await create_filter(telegram_id, title, link, brand, model, generation)
 
     keyboard = await filter_menu_buttons()
-    await message.answer(text="Фильтр добавлен для отслеживания", reply_markup=keyboard)
+    await message.answer(text="Запрос принят, ожидайте ответа!", reply_markup=keyboard)
     await state.set_state(RequestFilterState.action_type)

@@ -70,7 +70,7 @@ def request_analytic_damage(message: str, telegram_id: str):
 
 @sync_to_async
 def request_filter(telegram_id: str):
-    request_filter_task = api_request_filters_task.delay(telegram_id, telegram_id)
+    request_filter_task = api_request_filters_task.delay(telegram_id)
     logger.info(f'Задача создана - request_filter_task, id - {request_filter_task.task_id}')
     return True
 

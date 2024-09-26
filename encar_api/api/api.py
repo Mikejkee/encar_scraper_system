@@ -8,7 +8,7 @@ from drf_yasg.utils import swagger_auto_schema
 
 from .utils.API_parameters import (CAR_URL, CAR_VIN, TG_ID, FILTER_ID, FILTER_LINK, FILTER_MODEL, FILTER_TITLE,
                                    FILTER_BRAND, FILTER_GENERATION)
-from .serializers import CarSerializer, InsuranceSerializer, InspectionSerializer, FilterSerializer
+from .serializers import CarSerializer, CarListSerializer, InsuranceSerializer, InspectionSerializer, FilterSerializer
 from .utils.help_utils import extract_car_id
 from .utils.db_utils import load_data_from_bd, load_data_in_db
 
@@ -44,12 +44,12 @@ class APICarInfoByUrl(APIView):
         if not car_id:
             return Response({'error': "The link does not contain a car"}, status=400)
 
-        card_info = load_data_from_bd(config, 'select_cards_by_car_id.sql', base_dir,
+        card_info = load_data_from_bd(config, 'select_parsing_cards_by_car_id.sql', base_dir,
                                       'encar', 'cards', params_values={'car_id': car_id},
                                       expanding=False)
         if card_info.empty:
             return Response({'error': "The bad link (this car does not exist)"}, status=400)
-        card_serializer_data = CarSerializer(card_info.iloc[0]).data
+        card_serializer_data = CarListSerializer(card_info.iloc[0]).data
 
         # inspection_info = load_data_from_bd(config, 'select_inspection_by_car_id.sql', base_dir,
         #                                     'encar', 'inspection_list',
@@ -102,12 +102,12 @@ class APICarInfoByVIN(APIView):
         inspection_serializer_data = InspectionSerializer(newest_inspection_info.iloc[0]).data
 
         car_id = inspection_serializer_data['car_id']
-        card_info = load_data_from_bd(config, 'select_cards_by_car_id.sql', base_dir,
+        card_info = load_data_from_bd(config, 'select_parsing_cards_by_car_id.sql', base_dir,
                                       'encar', 'cards', params_values={'car_id': car_id},
                                       expanding=False)
         if card_info.empty:
             return Response({'error': "This car_id does not exist"}, status=400)
-        card_serializer_data = CarSerializer(card_info.iloc[0]).data
+        card_serializer_data = CarListSerializer(card_info.iloc[0]).data
 
         # insurance_info = load_data_from_bd(config, 'select_insurance_by_car_id.sql', base_dir,
         #                                    'encar', 'insurance_list',
