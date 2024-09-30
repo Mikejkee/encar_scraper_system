@@ -4,9 +4,9 @@ from django.conf.urls.static import static
 from django.conf import settings
 
 urlpatterns = [
-    path('api/admin/', admin.site.urls),
-    path('api/auth/', include('authentication.urls')),
-    path('api/', include('api.urls')),
+    path(r'api/admin/', admin.site.urls),
+    path(r'api/auth/', include('authentication.urls')),
+    path(r'api/', include('api.urls')),
     # path('', include('business_logic.urls')),
 ]
 

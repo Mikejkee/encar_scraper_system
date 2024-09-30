@@ -15,9 +15,9 @@ services:
     env_file:
       - ./.env/.env.dev
     depends_on:
-      - redis_bot
+      - redis
 
-  redis_bot:
+  redis:
     image: redis:7-alpine
     networks:
       - encar_net
@@ -34,7 +34,7 @@ services:
     env_file:
       - ./.env/.env.dev
     depends_on:
-      - redis_bot
+      - redis
 
   celery_bot_beat:
     build:
@@ -48,7 +48,7 @@ services:
     env_file:
       - ./.env/.env.dev
     depends_on:
-      - redis_bot
+      - redis
 
   flower_bot:
     build:
@@ -64,7 +64,7 @@ services:
     ports:
       - 5558:5555
     depends_on:
-      - redis_bot
+      - redis
 
   telegrambot:
     build:

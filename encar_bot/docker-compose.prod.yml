@@ -1,5 +1,6 @@
 services:
   nginx-proxy:
+    container_name: nginx-proxy-bot
     build:
       context: .
       dockerfile: ./compose/production/nginx/Dockerfile
@@ -12,9 +13,8 @@ services:
       - /var/run/docker.sock:/tmp/docker.sock:ro
     ports:
       - 8001:6001
-      - 15672:15672
     depends_on:
-      - app
+      - app-bot
       - flower
       - redis
     networks:
@@ -22,7 +22,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-  app:
+  app-bot:
     build:
       context: .
       dockerfile: ./compose/production/django/Dockerfile
@@ -42,8 +42,10 @@ services:
       - flower
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    expose:
+      - "8001"
 
-  redis_bot:
+  redis:
     image: redis:6-alpine
     restart: always
     networks:
@@ -142,8 +144,8 @@ services:
       - ./.env/.env-prod.dev
     depends_on:
       - rabbitmq
-      - app
-      - redis_bot
+      - app-bot
+      - redis
     networks:
       - encar_net
     extra_hosts:

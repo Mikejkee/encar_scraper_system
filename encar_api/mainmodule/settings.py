@@ -170,7 +170,14 @@ REST_FRAMEWORK = {
 }
 
 CORS_URLS_REGEX = r"^/api/.*$"
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ORIGIN_ALLOW_ALL = True
+
+CORS_ALLOWED_ORIGINS = [
+    "http://93.183.104.153:8000",
+    "http://93.183.104.153",
+]
+
+CSRF_TRUSTED_ORIGINS = ['http://93.183.104.153:8000, http://93.183.104.153']
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=24),
@@ -199,7 +206,6 @@ SIMPLE_JWT = {
 }
 
 
-CSRF_TRUSTED_ORIGINS = ['https://api.encar.tech', 'https://static.encar.tech',]
 
 LOGGING = {
     'version': 1,

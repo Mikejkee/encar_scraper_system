@@ -131,13 +131,13 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
-STATIC_URL = '/static/'
+STATIC_URL = '/bot/static/'
 # STATICFILES_DIRS = [
 #     os.path.join(BASE_DIR, 'static')
 # ]
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
-MEDIA_URL = '/media/'
+MEDIA_URL = '/bot/media/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -171,7 +171,14 @@ def route_task(name, args, kwargs, options, task=None, **kw):
 
 CELERY_TASK_ROUTES = (route_task,)
 
-CSRF_TRUSTED_ORIGINS = ['https://static.datasculptors.ru',]
+CORS_ORIGIN_ALLOW_ALL = True
+
+CORS_ALLOWED_ORIGINS = [
+    "http://93.183.104.153:8001",
+    "http://93.183.104.153",
+]
+
+CSRF_TRUSTED_ORIGINS = ['http://93.183.104.153:8001, http://93.183.104.153']
 
 LOGGING = {
     'version': 1,
